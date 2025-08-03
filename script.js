@@ -8,7 +8,7 @@ const generateButton = document.getElementById("generateRoutine");
 let selectedProductIds = JSON.parse(localStorage.getItem("selectedProducts")) || [];
 let allProducts = [];
 
-/* Load product data and display based on selected category */
+/* Load all products and initialize display */
 async function loadProducts() {
   const response = await fetch("products.json");
   const data = await response.json();
@@ -17,7 +17,7 @@ async function loadProducts() {
   updateSelectedProducts();
 }
 
-/* Display product cards filtered by category */
+/* Display filtered products by category */
 function displayProducts() {
   const category = categoryFilter.value;
   const filtered = allProducts.filter(p => p.category === category);
@@ -47,14 +47,14 @@ function displayProducts() {
   });
 }
 
-/* Toggle product description display */
+/* Toggle description visibility */
 function toggleDescription(e) {
   e.stopPropagation();
   const desc = e.target.nextElementSibling;
   desc.classList.toggle("hidden");
 }
 
-/* Add or remove a product from selection */
+/* Toggle selected/unselected */
 function toggleSelection(productId) {
   if (selectedProductIds.includes(productId)) {
     selectedProductIds = selectedProductIds.filter(id => id !== productId);
@@ -67,7 +67,7 @@ function toggleSelection(productId) {
   updateSelectedProducts();
 }
 
-/* Display selected products in the side list */
+/* Update the selected product list below */
 function updateSelectedProducts() {
   selectedList.innerHTML = "";
 
@@ -83,7 +83,7 @@ function updateSelectedProducts() {
   });
 }
 
-/* Remove one item from selected */
+/* Remove a selected item */
 function removeSelected(productId) {
   selectedProductIds = selectedProductIds.filter(id => id !== productId);
   localStorage.setItem("selectedProducts", JSON.stringify(selectedProductIds));
@@ -91,7 +91,7 @@ function removeSelected(productId) {
   updateSelectedProducts();
 }
 
-/* Get full info for selected products */
+/* Get selected product data */
 function getSelectedProductData() {
   return allProducts.filter(p => selectedProductIds.includes(p.id));
 }
@@ -105,7 +105,7 @@ function displayMessage(text, sender = "bot") {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-/* Generate routine using Cloudflare Worker + OpenAI */
+/* Handle routine generation */
 generateButton.addEventListener("click", async () => {
   const selected = getSelectedProductData();
   if (selected.length === 0) {
@@ -127,23 +127,28 @@ generateButton.addEventListener("click", async () => {
     ).join("\n\n")}\n\nPlease generate a full routine using only these.`
   };
 
-  const response = await fetch("https://product-advisor.ncope232001.workers.dev", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messages: [systemMessage, userMessage],
-      model: "gpt-4o"
-    })
-  });
+  try {
+    const response = await fetch("https://product-advisor.ncope232001.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: [systemMessage, userMessage],
+        model: "gpt-4o"
+      })
+    });
 
-  const data = await response.json();
-  const reply = data.choices?.[0]?.message?.content || "Sorry, something went wrong.";
-  displayMessage(reply, "bot");
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Sorry, something went wrong.";
+    displayMessage(reply, "bot");
+  } catch (err) {
+    console.error(err);
+    displayMessage("Something went wrong connecting to the AI.", "bot");
+  }
 });
 
-/* Placeholder for follow-up question handling */
+/* Handle follow-up form input */
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const input = document.getElementById("userInput");
@@ -156,6 +161,6 @@ chatForm.addEventListener("submit", (e) => {
   displayMessage("Follow-up handling coming soon!", "bot");
 });
 
-/* On page load */
+/* Load on startup */
 categoryFilter.addEventListener("change", displayProducts);
 loadProducts();
