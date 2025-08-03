@@ -1,3 +1,4 @@
+// Get references to DOM elements
 const categoryFilter = document.getElementById("categoryFilter");
 const productsContainer = document.getElementById("productsContainer");
 const chatForm = document.getElementById("chatForm");
@@ -5,10 +6,11 @@ const chatWindow = document.getElementById("chatWindow");
 const selectedList = document.getElementById("selectedProductsList");
 const generateButton = document.getElementById("generateRoutine");
 
+// Store selected product IDs and all product data
 let selectedProductIds = JSON.parse(localStorage.getItem("selectedProducts")) || [];
 let allProducts = [];
 
-/* Load all products and initialize display */
+// Load products from JSON file and initialize UI
 async function loadProducts() {
   const response = await fetch("products.json");
   const data = await response.json();
@@ -17,7 +19,7 @@ async function loadProducts() {
   updateSelectedProducts();
 }
 
-/* Display filtered products by category */
+// Display products filtered by selected category
 function displayProducts() {
   const category = categoryFilter.value;
   const filtered = allProducts.filter(p => p.category === category);
@@ -42,35 +44,34 @@ function displayProducts() {
     `;
   }).join("");
 
+  // Add click listeners to each product card
   document.querySelectorAll(".product-card").forEach(card => {
     card.addEventListener("click", () => toggleSelection(parseInt(card.dataset.id)));
   });
 }
 
-/* Toggle description visibility */
+// Toggle showing or hiding product descriptions
 function toggleDescription(e) {
   e.stopPropagation();
   const desc = e.target.nextElementSibling;
   desc.classList.toggle("hidden");
 }
 
-/* Toggle selected/unselected */
+// Add or remove a product from selection
 function toggleSelection(productId) {
   if (selectedProductIds.includes(productId)) {
     selectedProductIds = selectedProductIds.filter(id => id !== productId);
   } else {
     selectedProductIds.push(productId);
   }
-
   localStorage.setItem("selectedProducts", JSON.stringify(selectedProductIds));
   displayProducts();
   updateSelectedProducts();
 }
 
-/* Update the selected product list below */
+// Show selected products in the sidebar list
 function updateSelectedProducts() {
   selectedList.innerHTML = "";
-
   const selected = allProducts.filter(p => selectedProductIds.includes(p.id));
   selected.forEach(p => {
     const item = document.createElement("div");
@@ -83,7 +84,7 @@ function updateSelectedProducts() {
   });
 }
 
-/* Remove a selected item */
+// Remove a product from selection list
 function removeSelected(productId) {
   selectedProductIds = selectedProductIds.filter(id => id !== productId);
   localStorage.setItem("selectedProducts", JSON.stringify(selectedProductIds));
@@ -91,12 +92,12 @@ function removeSelected(productId) {
   updateSelectedProducts();
 }
 
-/* Get selected product data */
+// Return selected product objects
 function getSelectedProductData() {
   return allProducts.filter(p => selectedProductIds.includes(p.id));
 }
 
-/* Display a chat message */
+// Add a message bubble to the chat window
 function displayMessage(text, sender = "bot") {
   const msg = document.createElement("div");
   msg.className = sender === "user" ? "chat-bubble user" : "chat-bubble bot";
@@ -105,7 +106,7 @@ function displayMessage(text, sender = "bot") {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-/* Handle routine generation */
+// Generate a routine using selected products via OpenAI proxy
 generateButton.addEventListener("click", async () => {
   const selected = getSelectedProductData();
   if (selected.length === 0) {
@@ -115,17 +116,18 @@ generateButton.addEventListener("click", async () => {
 
   displayMessage("Generating your personalized routine…", "bot");
 
-  const systemMessage = {
-    role: "system",
-    content: "You are a L'Oréal advisor helping customers build routines using only the products listed."
-  };
-
-  const userMessage = {
-    role: "user",
-    content: `Here are the selected products:\n\n${selected.map(p =>
-      `- ${p.name} by ${p.brand}: ${p.description}`
-    ).join("\n\n")}\n\nPlease generate a full routine using only these.`
-  };
+  const messages = [
+    {
+      role: "system",
+      content: "You are a L'Oréal advisor helping customers build routines using only the products listed."
+    },
+    {
+      role: "user",
+      content: `Here are the selected products:\n\n${selected.map(p =>
+        `- ${p.name} by ${p.brand}: ${p.description}`
+      ).join("\n\n")}\n\nPlease generate a full routine using only these.`
+    }
+  ];
 
   try {
     const response = await fetch("https://product-advisor.ncope232001.workers.dev", {
@@ -134,8 +136,8 @@ generateButton.addEventListener("click", async () => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        messages: [systemMessage, userMessage],
-        model: "gpt-4o"
+        model: "gpt-4o",
+        messages: messages
       })
     });
 
@@ -148,7 +150,7 @@ generateButton.addEventListener("click", async () => {
   }
 });
 
-/* Handle follow-up form input */
+// Handle chat form (follow-up messages)
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const input = document.getElementById("userInput");
@@ -158,9 +160,10 @@ chatForm.addEventListener("submit", (e) => {
   displayMessage(userText, "user");
   input.value = "";
 
+  // Placeholder behavior for follow-up questions
   displayMessage("Follow-up handling coming soon!", "bot");
 });
 
-/* Load on startup */
+// Run on startup
 categoryFilter.addEventListener("change", displayProducts);
 loadProducts();
