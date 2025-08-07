@@ -142,7 +142,7 @@ generateButton.addEventListener("click", async () => {
     });
 
     const data = await response.json();
-    const reply = data.reply || "Sorry, something went wrong.";
+    const reply = data.choices?.[0]?.message?.content || "Sorry, something went wrong.";
     displayMessage(reply, "bot");
   } catch (err) {
     console.error(err);
@@ -151,7 +151,7 @@ generateButton.addEventListener("click", async () => {
 });
 
 // Handle chat form (follow-up messages)
-chatForm.addEventListener("submit", (e) => {
+chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = document.getElementById("userInput");
   const userText = input.value.trim();
@@ -159,9 +159,36 @@ chatForm.addEventListener("submit", (e) => {
 
   displayMessage(userText, "user");
   input.value = "";
+  displayMessage("Thinking…", "bot");
 
-  // Placeholder behavior for follow-up questions
-  displayMessage("Follow-up handling coming soon!", "bot");
+  try {
+    const response = await fetch("https://product-advisor.ncope232001.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful L'Oréal advisor who responds clearly to skincare questions."
+          },
+          {
+            role: "user",
+            content: userText
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't find an answer.";
+    displayMessage(reply, "bot");
+  } catch (err) {
+    console.error(err);
+    displayMessage("There was an error processing your message.", "bot");
+  }
 });
 
 // Run on startup
