@@ -100,7 +100,7 @@ function getSelectedProductData() {
 function displayMessage(text, sender = "bot") {
   const msg = document.createElement("div");
   msg.className = sender === "user" ? "chat-bubble user" : "chat-bubble bot";
-  msg.textContent = text;
+  msg.innerHTML = text.replace(/\n/g, "<br>");
   chatWindow.appendChild(msg);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -134,18 +134,22 @@ generateButton.addEventListener("click", async () => {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: messages
-      })
+      body: JSON.stringify({ model: "gpt-4o", messages })
     });
 
     const data = await response.json();
-    const reply = data.reply || "Sorry, something went wrong.";
-    displayMessage(reply, "bot");
+    console.log("Routine response:", data);
+
+    if (data && data.reply) {
+      displayMessage(data.reply, "bot");
+    } else if (data.choices?.[0]?.message?.content) {
+      displayMessage(data.choices[0].message.content, "bot");
+    } else {
+      displayMessage("⚠️ Something went wrong with the response format.", "bot");
+    }
   } catch (err) {
     console.error(err);
-    displayMessage("Something went wrong connecting to the AI.", "bot");
+    displayMessage("❌ Could not connect to the AI service.", "bot");
   }
 });
 
@@ -182,11 +186,18 @@ chatForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
-    const reply = data.reply || "Sorry, I couldn't find an answer.";
-    displayMessage(reply, "bot");
+    console.log("Chat reply:", data);
+
+    if (data && data.reply) {
+      displayMessage(data.reply, "bot");
+    } else if (data.choices?.[0]?.message?.content) {
+      displayMessage(data.choices[0].message.content, "bot");
+    } else {
+      displayMessage("⚠️ AI did not return a valid message.", "bot");
+    }
   } catch (err) {
     console.error(err);
-    displayMessage("There was an error processing your message.", "bot");
+    displayMessage("❌ Error processing your message.", "bot");
   }
 });
 
