@@ -142,7 +142,7 @@ generateButton.addEventListener("click", async () => {
     });
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Sorry, something went wrong.";
+    const reply = data.reply || "Sorry, something went wrong.";
     displayMessage(reply, "bot");
   } catch (err) {
     console.error(err);
