@@ -44,7 +44,6 @@ function displayProducts() {
     `;
   }).join("");
 
-  // Add click listeners to each product card
   document.querySelectorAll(".product-card").forEach(card => {
     card.addEventListener("click", () => toggleSelection(parseInt(card.dataset.id)));
   });
@@ -142,7 +141,7 @@ generateButton.addEventListener("click", async () => {
     });
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Sorry, something went wrong.";
+    const reply = data.reply || "Sorry, something went wrong.";
     displayMessage(reply, "bot");
   } catch (err) {
     console.error(err);
@@ -183,7 +182,7 @@ chatForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't find an answer.";
+    const reply = data.reply || "Sorry, I couldn't find an answer.";
     displayMessage(reply, "bot");
   } catch (err) {
     console.error(err);
