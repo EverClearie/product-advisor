@@ -175,7 +175,8 @@ chatForm.addEventListener("submit", async (e) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful L'Oréal advisor who responds clearly to skincare questions."
+            content: "You are a skincare routine assistant specialized in L'Oréal Paris products. Only answer questions related to skincare routines, product ingredients, application steps, and L'Oréal products. Politely decline any unrelated topics, such as politics, history, entertainment, or general trivia, and remind the user to ask about skincare."
+"
           },
           {
             role: "user",
